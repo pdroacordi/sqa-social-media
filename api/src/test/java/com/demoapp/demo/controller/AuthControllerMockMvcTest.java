@@ -18,10 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.demoapp.demo.model.User;
 import com.demoapp.demo.service.UserService;
 
-/**
- * Testes com MockMvc: exercitam os endpoints HTTP de /auth (status, corpo JSON e mensagens),
- * mockando o UserService para isolar a camada de contrato da API.
- */
 @WebMvcTest(AuthController.class)
 class AuthControllerMockMvcTest {
 
@@ -84,9 +80,6 @@ class AuthControllerMockMvcTest {
   @Test
   @DisplayName("dado senha correta mas fora do padrao de forca, quando signin, entao deveria retornar 401 (BUG: retorna 422 antes de checar credenciais)")
   void dadoSenhaCorretaMasForaDoPadraoDeForca_quandoSignin_entaoDeveriaRetornar401() throws Exception {
-    // Usuario cadastrado com uma senha que nao cumpre mais o regex de forca (ex: politica mudou),
-    // ou o cliente simplesmente digitou uma senha fraca por engano. O endpoint de login
-    // deveria comparar credenciais e responder 401 "Credenciais invalidas", nao revalidar forca.
     given(service.isEmailValid(anyString())).willReturn(true);
     given(service.isPasswordValid(anyString())).willReturn(false);
     given(service.findByEmail(anyString())).willReturn(usuarioExistente("usuario@teste.com", "outraSenha"));

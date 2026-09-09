@@ -6,14 +6,10 @@ describe("isPasswordValid / getPasswordValidationMessage", () => {
   });
 
   test("dado senha com exatamente 8 caracteres, quando validar senha, entao deveria retornar true (BUG: length <= 8 exige na pratica 9+ caracteres)", () => {
-    // "Abcdef1@" tem 8 caracteres e cumpre maiuscula/minuscula/numero/especial.
-    // O enunciado e a propria UI dizem "minimo de 8 caracteres", mas a implementacao rejeita.
     expect(isPasswordValid("Abcdef1@")).toBe(true);
   });
 
   test("dado senha cujo unico caractere especial e '!', quando validar senha, entao deveria aceitar (BUG: '!' nao esta em nenhum dos dois conjuntos de caracteres especiais do frontend)", () => {
-    // '!' e um caractere especial comum e ate aceito pelo backend (UserService.isPasswordValid
-    // permite @$!%*?&), mas nenhuma das duas regex de client/src/utils/password.ts o reconhece.
     expect(isPasswordValid("Password123!")).toBe(true);
   });
 
@@ -22,9 +18,6 @@ describe("isPasswordValid / getPasswordValidationMessage", () => {
     const mensagem = getPasswordValidationMessage(senha);
     const valida = isPasswordValid(senha);
 
-    // getPasswordValidationMessage inclui "." como especial e retorna "" (sem erros),
-    // mas isPasswordValid nao inclui "." em seu regex e retorna false. As duas funcoes
-    // nao podem discordar sobre a mesma senha.
     expect(valida).toBe(mensagem === "");
   });
 

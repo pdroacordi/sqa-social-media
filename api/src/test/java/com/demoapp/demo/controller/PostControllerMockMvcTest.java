@@ -20,9 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.demoapp.demo.service.PostService;
 
-/**
- * Testes com MockMvc para os endpoints de /posts, mockando o PostService.
- */
 @WebMvcTest(PostController.class)
 class PostControllerMockMvcTest {
 
@@ -35,11 +32,6 @@ class PostControllerMockMvcTest {
   @Test
   @DisplayName("dado userId ausente, quando getLikedPosts, entao deveria retornar o erro de dominio (BUG: Spring intercepta antes com sua propria resposta)")
   void dadoUserIdAusente_quandoGetLikedPosts_entaoDeveriaRetornarErroConsistenteDoDominio() throws Exception {
-    // O controller define um ErrorResponse customizado {"message":"userId é obrigatório","status":400}
-    // para o caso de userId == null (PostController.java:44-48), mas como o parametro e
-    // @RequestParam Long userId (obrigatorio para o Spring), a ausencia do parametro nunca
-    // chega a executar o corpo do metodo: o Spring MVC responde antes com seu proprio erro,
-    // que nao tem esse formato de corpo.
     mockMvc.perform(get("/posts/liked"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message", is("userId é obrigatório")));

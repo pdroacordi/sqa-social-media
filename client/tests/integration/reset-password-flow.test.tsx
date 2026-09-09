@@ -37,8 +37,6 @@ describe("Fluxo de redefinicao de senha", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Enviar Email" }));
 
-    // O requisito 3 do enunciado exige a mensagem exata "E-mail enviado com sucesso",
-    // mas a implementacao exibe "Email enviado com sucesso para alterar a senha! Redirecionando..."
     expect(await screen.findByText("E-mail enviado com sucesso")).toBeInTheDocument();
   });
 
