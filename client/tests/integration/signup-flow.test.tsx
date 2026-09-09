@@ -36,8 +36,6 @@ function preencherFormulario(senha: string, confirmar = senha, email = "novo@tes
 }
 
 function clicarSubmit() {
-  // "Criar Conta" tambem e o texto do botao de navegacao no Header; o botao de
-  // submit do formulario e o unico com type="submit".
   const botoes = screen.getAllByRole("button", { name: "Criar Conta" });
   const botaoSubmit = botoes.find((botao) => botao.getAttribute("type") === "submit");
   fireEvent.click(botaoSubmit!);

@@ -33,7 +33,6 @@ describe("Fluxo do feed de posts (integracao page.tsx + PostCard + postsService)
     });
     mockedToggleLikePost.mockResolvedValue(undefined);
 
-    // Usuario pre-autenticado via localStorage (chave correta, lida por getUser).
     localStorage.setItem("sqa_social_user", JSON.stringify({ id: 1, email: "usuario@teste.com" }));
 
     render(
