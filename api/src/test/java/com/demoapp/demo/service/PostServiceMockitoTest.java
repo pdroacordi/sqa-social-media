@@ -23,12 +23,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.demoapp.demo.model.UserPostReaction;
 import com.demoapp.demo.repository.UserPostReactionRepository;
 
-/**
- * Testes com Mockito: isolam o PostService mockando UserPostReactionRepository,
- * sem subir contexto Spring e sem camada HTTP. toggleLike e o calculo de paginacao
- * de getLikedPosts nao dependem do RestTemplate hardcoded no construtor (ver limitacao
- * de testabilidade documentada no plano), entao sao isolaveis com Mockito puro.
- */
 @ExtendWith(MockitoExtension.class)
 class PostServiceMockitoTest {
 
@@ -85,9 +79,6 @@ class PostServiceMockitoTest {
     reacao.setPostId(100L);
     when(reactionRepository.findByUserId(1L)).thenReturn(List.of(reacao));
 
-    // Espera-se que skip negativo seja tratado de forma graciosa (ex: paginacao vazia),
-    // mas List.subList(-1, ...) lanca IndexOutOfBoundsException, capturada e relancada
-    // como RuntimeException("Erro ao buscar posts curtidos: ...") pelo proprio servico.
     assertDoesNotThrow(() -> postService.getLikedPosts(1L, 5, -1),
         "Esperado tratamento gracioso para skip negativo, mas o servico lanca RuntimeException (IndexOutOfBoundsException)");
   }

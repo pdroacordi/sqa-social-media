@@ -10,10 +10,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import com.demoapp.demo.model.User;
 
-/**
- * Teste extra com @DataJpaTest (H2), fora das 3 categorias obrigatorias do enunciado,
- * mas de alto valor: verifica se a persistencia impede e-mails duplicados no nivel de banco.
- */
 @DataJpaTest
 class UserRepositoryDataJpaTest {
 
@@ -32,8 +28,6 @@ class UserRepositoryDataJpaTest {
     segundo.setEmail("duplicado@teste.com");
     segundo.setPassword("OutraSenha123!");
 
-    // A unicidade de e-mail hoje so e checada na camada de servico (findByEmail antes do save),
-    // nao no banco. Este teste documenta que a entidade deveria rejeitar o segundo insert.
     assertThrows(DataIntegrityViolationException.class, () -> userRepository.saveAndFlush(segundo),
         "Esperado que o banco rejeitasse e-mail duplicado, mas User nao possui constraint de unicidade na coluna email");
   }

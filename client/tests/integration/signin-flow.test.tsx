@@ -45,8 +45,6 @@ describe("Fluxo de login (signin)", () => {
     fireEvent.change(screen.getByPlaceholderText("••••••••"), {
       target: { value: "SenhaErrada1!" },
     });
-    // "Entrar" tambem aparece no botao de navegacao do Header; o botao de
-    // submit do formulario e o unico com type="submit".
     const botoes = screen.getAllByRole("button", { name: "Entrar" });
     fireEvent.click(botoes.find((botao) => botao.getAttribute("type") === "submit")!);
 
