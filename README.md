@@ -6,6 +6,7 @@ Projeto educacional com uma API Spring Boot e um frontend Next.js.
 
 - `api/`: backend Java 17 com Spring Boot, autenticação, usuários, posts e curtidas.
 - `client/`: frontend Next.js/React que consome a API.
+- `tests/`: testes E2E e de API (caixa-preta) com Playwright.
 
 Principais rotas da aplicação:
 
@@ -46,4 +47,5 @@ NEXT_PUBLIC_BASE_URL=http://localhost:8080
 
 - [README da API](api/README.md)
 - [README do Frontend](client/README.md)
+- [README dos Testes E2E e de API](tests/README.md)
 - [DummyJSON API Docs](https://dummyjson.com/docs)

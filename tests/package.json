@@ -1,0 +1,21 @@
+{
+  "name": "sqa-social-media-tests",
+  "version": "1.0.0",
+  "description": "Testes E2E e de API (caixa-preta) do SQA Social Media com Playwright",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test --project=api",
+    "test:e2e": "playwright test --project=e2e",
+    "test:headed": "playwright test --project=e2e --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3"
+  }
+}
