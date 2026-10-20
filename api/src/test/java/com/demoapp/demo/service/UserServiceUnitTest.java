@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.demoapp.demo.support.KnownBug;
+
 class UserServiceUnitTest {
 
   private final UserService service = new UserService(null);
@@ -24,6 +26,7 @@ class UserServiceUnitTest {
   }
 
   @Test
+  @KnownBug("isEmailValid so verifica a presenca de '@'")
   @DisplayName("dado um e-mail sem dominio, quando validar o e-mail, entao deveria retornar false (BUG: so verifica presenca de '@')")
   void dadoEmailSemDominio_quandoValidarEmail_entaoDeveriaRetornarFalse() {
     assertFalse(service.isEmailValid("user@"),
@@ -31,6 +34,7 @@ class UserServiceUnitTest {
   }
 
   @Test
+  @KnownBug("regex de senha aceita apenas @$!%*?& como especiais")
   @DisplayName("dado uma senha com caractere especial fora do conjunto permitido, quando validar a senha, entao deveria aceitar (BUG: regex restringe os especiais aceitos)")
   void dadoSenhaComCaractereEspecialForaDoConjuntoPermitido_quandoValidarSenha_entaoDeveriaAceitar() {
     assertTrue(service.isPasswordValid("Password123#"),
@@ -38,6 +42,7 @@ class UserServiceUnitTest {
   }
 
   @Test
+  @KnownBug("isPasswordValid lanca NullPointerException para senha nula")
   @DisplayName("dado uma senha nula, quando validar a senha, entao deveria retornar false sem lancar excecao (BUG: lanca NullPointerException)")
   void dadoSenhaNula_quandoValidarSenha_entaoDeveriaRetornarFalseSemLancarExcecao() {
     assertDoesNotThrow(() -> assertFalse(service.isPasswordValid(null)),
