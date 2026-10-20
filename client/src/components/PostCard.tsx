@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Post } from "@/service/types";
+import PostReactions from "@/components/PostReactions";
 
 interface PostCardProps {
   post: Post;
@@ -80,11 +81,13 @@ export default function PostCard({
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
           alignItems: "center",
           marginTop: "1rem",
         }}
       >
+        <PostReactions reactions={post.reactions} />
+
         <button
           onClick={handleLike}
           disabled={isLoading}

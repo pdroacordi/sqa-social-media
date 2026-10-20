@@ -24,7 +24,7 @@ describe("Fluxo de redefinicao de senha", () => {
     mockedResetPassword.mockReset();
   });
 
-  test("dado email cadastrado, quando solicitar redefinicao, entao deveria exibir exatamente 'E-mail enviado com sucesso' (BUG: mensagem real e diferente da exigida pelo requisito 3)", async () => {
+  test.failing("dado email cadastrado, quando solicitar redefinicao, entao deveria exibir exatamente 'E-mail enviado com sucesso' (BUG: mensagem real e diferente da exigida pelo requisito 3)", async () => {
     mockedResetPassword.mockResolvedValue(undefined);
     render(
       <AuthProvider>

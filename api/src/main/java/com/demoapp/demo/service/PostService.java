@@ -2,6 +2,8 @@ package com.demoapp.demo.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.demoapp.demo.dto.PostDTO;
+import com.demoapp.demo.mapper.PostMapper;
 import com.demoapp.demo.model.UserPostReaction;
 import com.demoapp.demo.repository.UserPostReactionRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,11 +16,13 @@ import java.util.stream.Collectors;
 public class PostService {
 
   private final UserPostReactionRepository reactionRepository;
+  private final PostMapper postMapper;
   private final RestTemplate restTemplate;
   private final ObjectMapper objectMapper;
 
-  public PostService(UserPostReactionRepository reactionRepository) {
+  public PostService(UserPostReactionRepository reactionRepository, PostMapper postMapper) {
     this.reactionRepository = reactionRepository;
+    this.postMapper = postMapper;
     this.restTemplate = new RestTemplate();
     this.objectMapper = new ObjectMapper();
   }
@@ -50,19 +54,12 @@ public class PostService {
           .collect(Collectors.toSet());
       }
 
-      List<Map<String, Object>> posts = new ArrayList<>();
+      List<PostDTO> posts = new ArrayList<>();
       JsonNode postsArray = rootNode.get("posts");
-      
+
       for (JsonNode postNode : postsArray) {
-        Map<String, Object> post = new HashMap<>();
-        Long postId = postNode.get("id").asLong();
-        
-        post.put("id", postId);
-        post.put("title", postNode.get("title").asText());
-        post.put("body", postNode.get("body").asText());
-        post.put("liked", likedPostIds.contains(postId));
-        
-        posts.add(post);
+        boolean liked = likedPostIds.contains(postNode.get("id").asLong());
+        posts.add(postMapper.toPost(postNode, liked));
       }
 
       Map<String, Object> result = new HashMap<>();
@@ -96,20 +93,14 @@ public class PostService {
       
       List<Long> paginatedIds = likedPostIds.subList(fromIndex, toIndex);
 
-      List<Map<String, Object>> posts = new ArrayList<>();
-      
+      List<PostDTO> posts = new ArrayList<>();
+
       for (Long postId : paginatedIds) {
         String url = "https://dummyjson.com/posts/" + postId;
         String response = restTemplate.getForObject(url, String.class);
         JsonNode postNode = objectMapper.readTree(response);
-        
-        Map<String, Object> post = new HashMap<>();
-        post.put("id", postNode.get("id").asLong());
-        post.put("title", postNode.get("title").asText());
-        post.put("body", postNode.get("body").asText());
-        post.put("liked", true);
-        
-        posts.add(post);
+
+        posts.add(postMapper.toPost(postNode, true));
       }
 
       Map<String, Object> result = new HashMap<>();

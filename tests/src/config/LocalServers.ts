@@ -16,7 +16,7 @@ export class LocalServers {
       command: `"${LocalServers.mavenWrapper()}" spring-boot:run -Dspring-boot.run.useTestClasspath=true "-Dspring-boot.run.arguments=${LocalServers.inMemoryDatabaseArguments()}"`,
       cwd: API_DIR,
       url: new URL(API_HEALTH_PATH, Environment.apiUrl).toString(),
-      reuseExistingServer: LocalServers.reuseExistingServer(),
+      reuseExistingServer: true,
       timeout: 180_000,
     };
   }
@@ -28,7 +28,7 @@ export class LocalServers {
       cwd: CLIENT_DIR,
       url: Environment.clientUrl,
       env: { NEXT_PUBLIC_BASE_URL: Environment.apiUrl },
-      reuseExistingServer: LocalServers.reuseExistingServer(),
+      reuseExistingServer: true,
       timeout: 120_000,
     };
   }
@@ -47,9 +47,5 @@ export class LocalServers {
       "--spring.jpa.hibernate.ddl-auto=create-drop",
       "--spring.jpa.show-sql=false",
     ].join(" ");
-  }
-
-  private static reuseExistingServer(): boolean {
-    return !process.env.CI;
   }
 }

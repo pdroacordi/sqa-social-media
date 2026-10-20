@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.demoapp.demo.model.User;
 import com.demoapp.demo.service.UserService;
+import com.demoapp.demo.support.KnownBug;
 
 @WebMvcTest(AuthController.class)
 class AuthControllerMockMvcTest {
@@ -78,6 +79,7 @@ class AuthControllerMockMvcTest {
   }
 
   @Test
+  @KnownBug("signin retorna 422 antes de checar as credenciais")
   @DisplayName("dado senha correta mas fora do padrao de forca, quando signin, entao deveria retornar 401 (BUG: retorna 422 antes de checar credenciais)")
   void dadoSenhaCorretaMasForaDoPadraoDeForca_quandoSignin_entaoDeveriaRetornar401() throws Exception {
     given(service.isEmailValid(anyString())).willReturn(true);

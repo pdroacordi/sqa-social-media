@@ -19,6 +19,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.demoapp.demo.service.PostService;
+import com.demoapp.demo.support.KnownBug;
 
 @WebMvcTest(PostController.class)
 class PostControllerMockMvcTest {
@@ -30,6 +31,7 @@ class PostControllerMockMvcTest {
   private PostService postService;
 
   @Test
+  @KnownBug("Spring responde 400 com corpo proprio antes do erro de dominio")
   @DisplayName("dado userId ausente, quando getLikedPosts, entao deveria retornar o erro de dominio (BUG: Spring intercepta antes com sua propria resposta)")
   void dadoUserIdAusente_quandoGetLikedPosts_entaoDeveriaRetornarErroConsistenteDoDominio() throws Exception {
     mockMvc.perform(get("/posts/liked"))

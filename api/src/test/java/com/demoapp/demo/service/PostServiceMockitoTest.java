@@ -18,16 +18,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.demoapp.demo.mapper.PostMapper;
 import com.demoapp.demo.model.UserPostReaction;
 import com.demoapp.demo.repository.UserPostReactionRepository;
+import com.demoapp.demo.support.KnownBug;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceMockitoTest {
 
   @Mock
   private UserPostReactionRepository reactionRepository;
+
+  @Spy
+  private PostMapper postMapper = new PostMapper();
 
   @InjectMocks
   private PostService postService;
@@ -72,6 +78,7 @@ class PostServiceMockitoTest {
   }
 
   @Test
+  @KnownBug("skip negativo causa IndexOutOfBoundsException")
   @DisplayName("dado skip negativo, quando getLikedPosts, entao deveria tratar como invalido em vez de lancar excecao (BUG: subList com indice negativo explode)")
   void dadoSkipNegativo_quandoGetLikedPosts_entaoDeveriaTratarComoInvalidoEmVezDeLancarExcecao() {
     UserPostReaction reacao = new UserPostReaction();

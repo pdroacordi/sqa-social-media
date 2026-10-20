@@ -24,6 +24,40 @@ test.describe("GET /posts", () => {
   });
 });
 
+test.describe("Reações dos posts (likes e dislikes)", () => {
+  const PAGE = { limit: 10, skip: 0 };
+
+  test("GET /posts inclui reactions com likes e dislikes em todos os posts", async ({ postsApi }) => {
+    const body: PostPage = await (await postsApi.list(PAGE)).json();
+
+    expect(body.posts).toHaveLength(PAGE.limit);
+    for (const post of body.posts) {
+      expect(post.reactions).toEqual({
+        likes: expect.any(Number),
+        dislikes: expect.any(Number),
+      });
+    }
+  });
+
+  test("GET /posts repassa as reactions publicadas pelo DummyJSON", async ({ postsApi, dummyJsonApi }) => {
+    const body: PostPage = await (await postsApi.list(PAGE)).json();
+    const dummyJsonPosts = await dummyJsonApi.listPosts(PAGE);
+
+    expect(body.posts.map(({ id, reactions }) => ({ id, reactions }))).toEqual(
+      dummyJsonPosts.map(({ id, reactions }) => ({ id, reactions })),
+    );
+  });
+
+  test("GET /posts/liked inclui as reactions do post curtido", async ({ postsApi, dummyJsonApi, registeredUser }) => {
+    await postsApi.toggleLike(POST_ID, registeredUser.id);
+
+    const body: PostPage = await (await postsApi.listLiked(registeredUser.id)).json();
+    const dummyJsonPost = await dummyJsonApi.getPost(POST_ID);
+
+    expect(body.posts).toEqual([expect.objectContaining({ id: POST_ID, reactions: dummyJsonPost.reactions })]);
+  });
+});
+
 test.describe("POST /posts/{postId}/like", () => {
   test("alterna a curtida do usuário a cada chamada", async ({ postsApi, registeredUser }) => {
     const firstToggle: LikeToggle = await (await postsApi.toggleLike(POST_ID, registeredUser.id)).json();
