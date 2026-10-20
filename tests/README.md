@@ -91,7 +91,7 @@ O `playwright.config.ts` usa a opção [`webServer`](https://playwright.dev/docs
 
 O fluxo de uma execução de `npm test`:
 
-1. O Playwright verifica se as URLs acima já respondem. Se sim, **reaproveita** o servidor existente (`reuseExistingServer`). Em CI (`CI=true`), sempre sobe servidores novos.
+1. O Playwright verifica se as URLs acima já respondem. Se sim, **reaproveita** o servidor existente (`reuseExistingServer`). É assim que a esteira de CI funciona: ela sobe a API (com MySQL) e o build de produção do cliente em passos próprios, e o Playwright apenas os reaproveita (veja [Integração Contínua](../README.md#integração-contínua-github-actions)).
 2. Se não respondem, executa os comandos acima e fica consultando as URLs até responderem (limite de 3 minutos para a API e 2 para o client).
 3. Roda os testes.
 4. Encerra os processos que ele mesmo subiu.
