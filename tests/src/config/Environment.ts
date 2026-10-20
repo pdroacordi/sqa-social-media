@@ -12,4 +12,5 @@ export class Environment {
 
   static readonly apiUrl = process.env.API_URL ?? "http://localhost:8080";
   static readonly clientUrl = process.env.CLIENT_URL ?? "http://localhost:3000";
+  static readonly dummyJsonUrl = process.env.DUMMYJSON_URL ?? "https://dummyjson.com";
 }

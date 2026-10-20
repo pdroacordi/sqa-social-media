@@ -229,7 +229,7 @@ Ele valida o status HTTP, o `status` do corpo e a `message` de uma vez, e mostra
 
 ## Testes de API
 
-Arquivos `specs/api/auth.api.spec.ts` e `specs/api/posts.api.spec.ts`. São **14 testes**, todos passando.
+Arquivos `specs/api/auth.api.spec.ts` e `specs/api/posts.api.spec.ts`. São **17 testes**, todos passando.
 
 | Endpoint                    | Cenário                                              | Esperado                           |
 | --------------------------- | ---------------------------------------------------- | ---------------------------------- |
@@ -247,12 +247,17 @@ Arquivos `specs/api/auth.api.spec.ts` e `specs/api/posts.api.spec.ts`. São **14
 | `POST /posts/{id}/like`     | Chamado duas vezes                                   | `liked: true` e depois `liked: false` |
 | `GET /posts/liked`          | Usuário que curtiu o post 1                          | `total: 1` e o post 1 na lista     |
 | `GET /posts/liked`          | Usuário sem curtidas                                 | `total: 0` e lista vazia           |
+| `GET /posts`                | Primeira página (`limit=10`)                         | Todo post com `reactions.likes` e `reactions.dislikes` numéricos |
+| `GET /posts`                | Comparação com `dummyjson.com/posts`                 | `reactions` idênticas às do DummyJSON para cada post |
+| `GET /posts/liked`          | Usuário que curtiu o post 1                          | Post 1 com as `reactions` de `dummyjson.com/posts/1` |
+
+Os testes de reações usam o DummyJSON como **oráculo**: a fixture `dummyJsonApi` (classe `src/api/DummyJsonApi.ts`) consulta a API pública diretamente e o teste verifica se a nossa API repassa os mesmos valores.
 
 ---
 
 ## Testes E2E
 
-Arquivos `specs/e2e/*.e2e.spec.ts`. São **6 testes**, todos passando.
+Arquivos `specs/e2e/*.e2e.spec.ts`. São **8 testes**, todos passando.
 
 | Arquivo   | Fluxo                                                                                                             |
 | --------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -262,6 +267,8 @@ Arquivos `specs/e2e/*.e2e.spec.ts`. São **6 testes**, todos passando.
 | signin    | Login correto leva ao feed autenticado; ao clicar em "Sair", o cabeçalho volta a mostrar "Entrar" e "Criar Conta" |
 | like      | Visitante clica em "Curtir" e recebe o alerta "Você precisa estar autenticado para curtir posts!"                 |
 | like      | Usuário logado curte o primeiro post, encontra-o em "Posts Curtidos", descurte e a lista fica vazia               |
+| reactions | Cada um dos 10 posts da página inicial exibe o número de likes e dislikes igual ao retornado por `GET /posts`     |
+| reactions | Usuário logado curte um post e os números de likes e dislikes exibidos continuam os mesmos                       |
 
 ---
 
