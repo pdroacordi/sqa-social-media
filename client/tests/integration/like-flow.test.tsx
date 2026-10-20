@@ -26,7 +26,15 @@ describe("Fluxo do feed de posts (integracao page.tsx + PostCard + postsService)
 
   test("dado feed com posts e usuario autenticado, quando curtir um post, entao atualiza estado do post no feed", async () => {
     mockedGetPosts.mockResolvedValue({
-      posts: [{ id: 1, title: "Post de teste", body: "Corpo", liked: false }],
+      posts: [
+        {
+          id: 1,
+          title: "Post de teste",
+          body: "Corpo",
+          liked: false,
+          reactions: { likes: 10, dislikes: 2 },
+        },
+      ],
       total: 1,
       skip: 0,
       limit: 10,
@@ -42,6 +50,8 @@ describe("Fluxo do feed de posts (integracao page.tsx + PostCard + postsService)
     );
 
     expect(await screen.findByText("Post de teste")).toBeInTheDocument();
+    expect(screen.getByTestId("post-likes")).toHaveTextContent("10");
+    expect(screen.getByTestId("post-dislikes")).toHaveTextContent("2");
 
     fireEvent.click(screen.getByText("Curtir"));
 

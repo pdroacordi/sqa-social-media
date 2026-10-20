@@ -53,7 +53,7 @@ npm start
 
 ## Rotas
 
-- `/`: feed de posts
+- `/`: feed de posts, cada um com o número de curtidas (likes) e descurtidas (dislikes) vindo do objeto `reactions` da API
 - `/signup`: cadastro
 - `/signin`: login
 - `/reset-password`: recuperação de senha
@@ -79,6 +79,7 @@ client/
 │   │   ├── Input.tsx            # Input com validação
 │   │   ├── Header.tsx           # Cabeçalho com navegação
 │   │   ├── PostCard.tsx         # Card de post com like
+│   │   ├── PostReactions.tsx    # Contadores de likes e dislikes do post
 │   │   └── TextButton.tsx       # Botão de texto (links)
 │   │
 │   ├── contexts/                # Contexts React

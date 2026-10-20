@@ -2,7 +2,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import PostCard from "@/components/PostCard";
 import { Post } from "@/service/types";
 
-const post: Post = { id: 1, title: "Titulo", body: "Corpo do post", liked: false };
+const post: Post = {
+  id: 1,
+  title: "Titulo",
+  body: "Corpo do post",
+  liked: false,
+  reactions: { likes: 192, dislikes: 25 },
+};
 
 describe("PostCard", () => {
   let alertSpy: jest.SpyInstance;
@@ -13,6 +19,13 @@ describe("PostCard", () => {
 
   afterEach(() => {
     alertSpy.mockRestore();
+  });
+
+  test("dado post com reactions, quando renderizar, entao exibe likes e dislikes junto ao post", () => {
+    render(<PostCard post={post} isAuthenticated={false} onLike={jest.fn()} />);
+
+    expect(screen.getByTestId("post-likes")).toHaveTextContent("192");
+    expect(screen.getByTestId("post-dislikes")).toHaveTextContent("25");
   });
 
   test("dado usuario nao autenticado, quando clicar em curtir, entao exibe alerta e nao chama onLike", () => {
