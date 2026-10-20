@@ -180,6 +180,30 @@ Posts:
 curl "http://localhost:8080/posts?userId=1&limit=10&skip=0"
 ```
 
+Cada post retornado por `GET /posts` e `GET /posts/liked` segue a estrutura do [DummyJSON](https://dummyjson.com/docs/posts), com as reações encapsuladas no objeto `reactions`:
+
+```json
+{
+  "id": 1,
+  "title": "His mother had always taught him",
+  "body": "His mother had always taught him not to ever think of himself as better than others...",
+  "liked": false,
+  "reactions": {
+    "likes": 192,
+    "dislikes": 25
+  }
+}
+```
+
+| Campo | Tipo | Origem |
+| ----- | ---- | ------ |
+| `id`, `title`, `body` | número / texto | DummyJSON |
+| `liked` | booleano | Banco local: indica se o `userId` informado curtiu o post |
+| `reactions.likes` | número | DummyJSON (`0` quando ausente) |
+| `reactions.dislikes` | número | DummyJSON (`0` quando ausente) |
+
+A conversão do JSON do DummyJSON para o contrato da API fica centralizada no `PostMapper`, que produz os records `PostDTO` e `ReactionsDTO`.
+
 ## Estrutura do Projeto
 
 ```
@@ -189,7 +213,8 @@ api/
 │   │   ├── java/com/demoapp/demo/
 │   │   │   ├── config/                     # Configurações (RestTemplate)
 │   │   │   ├── controller/                 # Controllers REST (AuthController, PostController)
-│   │   │   ├── dto/                        # Data Transfer Objects
+│   │   │   ├── dto/                        # Data Transfer Objects (PostDTO, ReactionsDTO, ...)
+│   │   │   ├── mapper/                     # Conversão do JSON do DummyJSON em DTOs (PostMapper)
 │   │   │   ├── model/                      # Entidades JPA (User, UserPostReaction)
 │   │   │   ├── repository/                 # Repositórios JPA
 │   │   │   ├── service/                    # Lógica de negócio
