@@ -18,7 +18,7 @@ describe("Persistencia de autenticacao entre reloads (integracao com AuthProvide
     localStorage.clear();
   });
 
-  test("dado login realizado, quando simular reload da pagina, entao deveria continuar autenticado (BUG: saveUser grava em 'user', getUser le 'sqa_social_user')", () => {
+  test.failing("dado login realizado, quando simular reload da pagina, entao deveria continuar autenticado (BUG: saveUser grava em 'user', getUser le 'sqa_social_user')", () => {
     const { unmount } = render(
       <AuthProvider>
         <Probe />

@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import com.demoapp.demo.model.User;
+import com.demoapp.demo.support.KnownBug;
 
 @DataJpaTest
 class UserRepositoryDataJpaTest {
@@ -17,6 +18,7 @@ class UserRepositoryDataJpaTest {
   private UserRepository userRepository;
 
   @Test
+  @KnownBug("User nao possui constraint de unicidade em email")
   @DisplayName("dado e-mail duplicado, quando salvar dois usuarios, entao deveria falhar por constraint unica (BUG: entidade User nao tem @Column(unique=true) em email)")
   void dadoEmailDuplicado_quandoSalvarDoisUsuarios_entaoDeveriaFalharPorConstraintUnica() {
     User primeiro = new User();

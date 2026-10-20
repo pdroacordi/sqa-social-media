@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "17"
+  NODE_VERSION: "22"
+  API_URL: http://localhost:8080
+  CLIENT_URL: http://localhost:3000
+
+jobs:
+  api-tests:
+    name: API - testes de unidade e integração (JUnit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v5
+
+      - name: Configurar Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Instalar dependências
+        run: ./mvnw -B -ntp dependency:go-offline
+
+      - name: Executar testes
+        run: ./mvnw -B -ntp test
+
+      - name: Publicar relatórios do Surefire
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: api-surefire-reports
+          path: api/target/surefire-reports
+          if-no-files-found: ignore
+
+  client-tests:
+    name: Cliente - testes de unidade e integração (Jest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v5
+
+      - name: Configurar Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Executar testes
+        run: npm test -- --ci
+
+      - name: Publicar cobertura
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: client-coverage
+          path: client/coverage
+          if-no-files-found: ignore
+
+  e2e-tests:
+    name: Testes E2E e de API (Playwright)
+    runs-on: ubuntu-latest
+    needs: [api-tests, client-tests]
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sqa_social_media
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/sqa_social_media?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+      SPRING_JPA_SHOW_SQL: "false"
+      NEXT_PUBLIC_BASE_URL: http://localhost:8080
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v5
+
+      - name: Configurar Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Configurar Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            client/package-lock.json
+            tests/package-lock.json
+
+      - name: Instalar dependências da API e gerar o pacote
+        working-directory: api
+        run: ./mvnw -B -ntp -DskipTests package
+
+      - name: Instalar dependências do cliente e gerar o build
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+
+      - name: Instalar dependências da suíte Playwright e o navegador
+        working-directory: tests
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Iniciar a API
+        working-directory: api
+        run: nohup java -jar target/demo-0.0.1-SNAPSHOT.jar > "$RUNNER_TEMP/api.log" 2>&1 &
+
+      - name: Iniciar o cliente
+        working-directory: client
+        run: nohup npm run start -- --port 3000 > "$RUNNER_TEMP/client.log" 2>&1 &
+
+      - name: Aguardar API e cliente ficarem disponíveis
+        run: |
+          wait_for() {
+            timeout 180 bash -c "until curl -sf -o /dev/null '$1'; do sleep 3; done" \
+              && echo "$1 disponível" \
+              || { echo "$1 indisponível"; exit 1; }
+          }
+          wait_for "$API_URL/posts/liked?userId=0"
+          wait_for "$CLIENT_URL"
+
+      - name: Verificar tipos da suíte Playwright
+        working-directory: tests
+        run: npm run typecheck
+
+      - name: Executar testes E2E e de API
+        working-directory: tests
+        run: npm test
+
+      - name: Publicar relatório do Playwright
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: |
+            tests/playwright-report
+            tests/test-results
+          if-no-files-found: ignore
+
+      - name: Publicar logs da API e do cliente
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: server-logs
+          path: |
+            ${{ runner.temp }}/api.log
+            ${{ runner.temp }}/client.log
+          if-no-files-found: ignore
