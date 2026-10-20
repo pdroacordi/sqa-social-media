@@ -12,13 +12,14 @@ Diferente dos testes da Atividade 2 (JUnit/MockMvc em `/api` e Jest/Testing Libr
 ## Sumário
 
 1. [Como rodar](#como-rodar)
-2. [Estrutura de pastas](#estrutura-de-pastas)
-3. [Arquitetura e padrões](#arquitetura-e-padrões)
-4. [Testes de API](#testes-de-api)
-5. [Testes E2E](#testes-e2e)
-6. [Bugs conhecidos (`test.fail`)](#bugs-conhecidos-testfail)
-7. [Decisões e armadilhas encontradas](#decisões-e-armadilhas-encontradas)
-8. [Como o projeto foi criado](#como-o-projeto-foi-criado)
+2. [Como o Playwright sobe o sistema](#como-o-playwright-sobe-o-sistema)
+3. [Estrutura de pastas](#estrutura-de-pastas)
+4. [Arquitetura e padrões](#arquitetura-e-padrões)
+5. [Testes de API](#testes-de-api)
+6. [Testes E2E](#testes-e2e)
+7. [Bugs conhecidos (`test.fail`)](#bugs-conhecidos-testfail)
+8. [Decisões e armadilhas encontradas](#decisões-e-armadilhas-encontradas)
+9. [Como o projeto foi criado](#como-o-projeto-foi-criado)
 
 ---
 
@@ -29,41 +30,30 @@ Diferente dos testes da Atividade 2 (JUnit/MockMvc em `/api` e Jest/Testing Libr
 - Node.js 18+ (testado com Node 24)
 - Java 17+
 - Acesso à internet (o endpoint `/posts` da API busca os posts em `dummyjson.com`)
+- **Não** é necessário MySQL: quando o Playwright sobe a API, ela usa um banco H2 em memória
 
-### 2. Subir o sistema
-
-Os testes **não** sobem a aplicação sozinhos: a API e o frontend precisam estar rodando antes.
-
-**API** (com MySQL configurado em `api/src/main/resources/application.properties`):
-
-```bash
-cd api
-./mvnw spring-boot:run
-```
-
-**API sem MySQL** (alternativa: banco H2 em memória, usando a dependência H2 que já existe no `pom.xml` com escopo de teste; nenhum arquivo é alterado):
-
-```bash
-cd api
-./mvnw spring-boot:run -Dspring-boot.run.useTestClasspath=true "-Dspring-boot.run.arguments=--spring.datasource.url=jdbc:h2:mem:e2e --spring.datasource.driverClassName=org.h2.Driver --spring.datasource.username=sa --spring.datasource.password= --spring.jpa.hibernate.ddl-auto=create-drop"
-```
-
-**Frontend**:
+### 2. Instalar (apenas na primeira vez)
 
 ```bash
 cd client
 npm install
-npm run dev
+cd ../tests
+npm install
+npx playwright install chromium
 ```
 
-### 3. Instalar e executar os testes
+### 3. Executar
 
 ```bash
 cd tests
-npm install
-npx playwright install chromium
 npm test
 ```
+
+Só isso. O próprio Playwright sobe a API e o frontend, espera os dois responderem, roda os testes e encerra os servidores no final (veja [Como o Playwright sobe o sistema](#como-o-playwright-sobe-o-sistema)).
+
+Se a API e/ou o frontend **já estiverem rodando** nas portas 8080 e 3000 (por exemplo, a API com MySQL que você subiu à mão), o Playwright **reaproveita** o que já está no ar em vez de subir outro.
+
+A primeira execução é mais lenta (o Maven baixa dependências e o Next.js compila as páginas); as seguintes levam menos de um minuto.
 
 ### Scripts disponíveis
 
@@ -90,16 +80,41 @@ CLIENT_URL=http://localhost:3000
 
 ---
 
+## Como o Playwright sobe o sistema
+
+O `playwright.config.ts` usa a opção [`webServer`](https://playwright.dev/docs/test-webserver), que recebe a lista de servidores que precisam estar no ar antes dos testes. As definições ficam na classe `src/config/LocalServers.ts`:
+
+| Servidor | Comando executado | Pasta | Considerado pronto quando |
+| -------- | ----------------- | ----- | ------------------------- |
+| API | `mvnw spring-boot:run` com banco H2 em memória | `api/` | `GET http://localhost:8080/posts/liked?userId=0` responde |
+| Client | `npm run dev -- --port 3000` | `client/` | `GET http://localhost:3000` responde |
+
+O fluxo de uma execução de `npm test`:
+
+1. O Playwright verifica se as URLs acima já respondem. Se sim, **reaproveita** o servidor existente (`reuseExistingServer`). Em CI (`CI=true`), sempre sobe servidores novos.
+2. Se não respondem, executa os comandos acima e fica consultando as URLs até responderem (limite de 3 minutos para a API e 2 para o client).
+3. Roda os testes.
+4. Encerra os processos que ele mesmo subiu.
+
+Se algum servidor não subir, o Playwright **interrompe antes de executar qualquer teste**, com a mensagem de erro do processo. Isso evita um falso positivo: sem servidor, os testes de bug marcados com `test.fail` "passariam" por falharem pelo motivo errado (conexão recusada em vez do bug).
+
+**Por que H2 e não MySQL?** A API usa MySQL por padrão, o que exigiria um banco instalado e configurado. O `pom.xml` já tem a dependência do H2 (escopo de teste, usada nos testes da Atividade 2). O Maven roda a API com `-Dspring-boot.run.useTestClasspath=true`, que inclui essa dependência, e as propriedades de conexão são passadas por argumento (`--spring.datasource.url=jdbc:h2:mem:e2e`, etc.). **Nenhum arquivo da API é alterado**, e o banco é criado do zero a cada execução.
+
+**Portas e URLs** vêm do `Environment` (arquivo `.env`). Se `API_URL` mudar, a API sobe na nova porta e o client recebe `NEXT_PUBLIC_BASE_URL` apontando para ela.
+
+---
+
 ## Estrutura de pastas
 
 ```
 tests/
-├── playwright.config.ts          Configuração do Playwright (projects "api" e "e2e")
+├── playwright.config.ts          Configuração do Playwright (projects "api" e "e2e" e webServer)
 ├── tsconfig.json                 Configuração do TypeScript (usada pelo typecheck)
 ├── .env.example                  Modelo das variáveis de ambiente
 ├── src/                          Código de apoio (nenhum teste aqui)
 │   ├── config/
-│   │   └── Environment.ts        Lê o .env e expõe as URLs da API e do frontend
+│   │   ├── Environment.ts        Lê o .env e expõe as URLs da API e do frontend
+│   │   └── LocalServers.ts       Define como subir a API (H2) e o frontend para os testes
 │   ├── models/
 │   │   ├── User.ts               Tipos Credentials e RegisteredUser
 │   │   └── Post.ts               Tipos Post, PostPage, LikeToggle e PostQuery
@@ -303,3 +318,4 @@ Todos têm a tag `@bug`, então dá para rodar só eles com `npx playwright test
 3. O teste de exemplo foi removido e o `playwright.config.ts` foi reescrito com os dois projects (`api` e `e2e`).
 4. `typescript` foi adicionado como dependência de desenvolvimento para o script `typecheck`.
 5. Toda a estrutura de `src/` e `specs/` foi escrita do zero.
+6. O `webServer` foi configurado para que `npm test` suba a API e o frontend automaticamente.

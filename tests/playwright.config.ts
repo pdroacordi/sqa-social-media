@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { Environment } from "./src/config/Environment";
+import { LocalServers } from "./src/config/LocalServers";
 
 export default defineConfig({
   testDir: "./specs",
@@ -26,4 +27,5 @@ export default defineConfig({
       },
     },
   ],
+  webServer: [LocalServers.api(), LocalServers.client()],
 });
